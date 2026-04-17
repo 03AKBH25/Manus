@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import chatRoutes from "./routes/chat.routes.js"
 
 const app = express();
 
@@ -23,5 +24,7 @@ app.get("/health", (req, res) => {
     message: "Server running is running don't you dare meddle with it!"
   });
 });
+
+app.use("/chat", chatRoutes)
 
 export default app;
