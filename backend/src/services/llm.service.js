@@ -6,8 +6,12 @@ const groq = new Groq({
 
 export const generateResponse = async (message) => {
   const completion = await groq.chat.completions.create({
-    model: "openai/gpt-oss-120b",
+    model: "llama-3.1-8b-instant",
     messages: [
+      {
+        role: "system",
+        content: "You are a helpful AI companion."
+      },
       {
         role: "user",
         content: message

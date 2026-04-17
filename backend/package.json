@@ -20,6 +20,7 @@
     "express": "^5.2.1",
     "groq-sdk": "^1.1.2",
     "helmet": "^8.1.0",
+    "hindsight": "^0.0.1-alpha.1",
     "morgan": "^1.10.1",
     "pg": "^8.20.0",
     "prisma": "^7.7.0"

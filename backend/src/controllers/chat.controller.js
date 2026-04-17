@@ -17,9 +17,9 @@ export const chatHandler = async (req, res) => {
       data: response
     });
   } catch (error) {
-    console.error(error);
+    console.error("Chat Error:", error);
     res.status(500).json({
-      error: "Internal server error"
+      error: error.message || "Internal server error"
     });
   }
 };
