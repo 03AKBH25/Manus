@@ -2,6 +2,23 @@ import { useEffect, useState } from "react";
 import { BrainCircuit, Loader2, UserRound } from "lucide-react";
 import { fetchMyProfile, updateCurrentUser } from "../services/api";
 
+const formatConversationDate = (value) => {
+  if (!value) {
+    return "Recently";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Recently";
+  }
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric"
+  });
+};
+
 function ProfilePage({ currentUser, onUserUpdate }) {
   const [profile, setProfile] = useState(null);
   const [name, setName] = useState(currentUser?.name || "");
@@ -89,6 +106,19 @@ function ProfilePage({ currentUser, onUserUpdate }) {
   }
 
   const { user, insights } = profile;
+  const behavioralPortrait = insights.behavioralPortrait || {
+    summary: "",
+    traits: insights.behavior?.traits || [],
+    conversationSignals: [],
+    emotionalTraits: [],
+    responsePreferences: [],
+    recurringThemes: insights.topThemes || []
+  };
+  const recentInteractions = insights.recentInteractions || [];
+  const portraitDetails = [
+    ...(behavioralPortrait.traits || []),
+    ...(behavioralPortrait.conversationSignals || [])
+  ];
 
   return (
     <section className="profile-shell">
@@ -159,8 +189,9 @@ function ProfilePage({ currentUser, onUserUpdate }) {
             <h3>Behavioral portrait</h3>
             <span>AI-derived</span>
           </div>
+          <p className="panel-copy">{behavioralPortrait.summary}</p>
           <div className="detail-stack">
-            {insights.behavior.traits.map((trait) => (
+            {portraitDetails.map((trait) => (
               <div key={trait} className="detail-card profile-detail">
                 <BrainCircuit size={16} />
                 <span>{trait}</span>
@@ -168,36 +199,133 @@ function ProfilePage({ currentUser, onUserUpdate }) {
             ))}
           </div>
 
-          <div className="section-heading compact">
-            <h3>Recurring themes</h3>
-            <span>{insights.topThemes.length} detected</span>
+          <div className="section-heading compact mt-4">
+            <h3>Emotional leanings</h3>
+            <span>{behavioralPortrait.emotionalTraits.length} detected</span>
           </div>
           <div className="tag-list">
-            {insights.topThemes.map((theme) => (
-              <span key={theme} className="tag-chip">
-                {theme}
-              </span>
-            ))}
+            {behavioralPortrait.emotionalTraits.length > 0 ? (
+              behavioralPortrait.emotionalTraits.map((trait) => (
+                <span key={trait} className="tag-chip profile-chip-soft">
+                  {trait}
+                </span>
+              ))
+            ) : (
+              <span className="tag-chip muted">More chats needed</span>
+            )}
+          </div>
+
+          <div className="section-heading compact mt-4">
+            <h3>Response preferences</h3>
+            <span>Best AI tone</span>
+          </div>
+          <div className="tag-list">
+            {behavioralPortrait.responsePreferences.length > 0 ? (
+              behavioralPortrait.responsePreferences.map((preference) => (
+                <span key={preference} className="tag-chip">
+                  {preference}
+                </span>
+              ))
+            ) : (
+              <span className="tag-chip muted">Still learning preferences</span>
+            )}
+          </div>
+
+          <div className="section-heading compact mt-4">
+            <h3>Recurring themes</h3>
+            <span>{behavioralPortrait.recurringThemes.length} detected</span>
+          </div>
+          <div className="tag-list">
+            {behavioralPortrait.recurringThemes.length > 0 ? (
+              behavioralPortrait.recurringThemes.map((theme) => (
+                <span key={theme} className="tag-chip">
+                  {theme}
+                </span>
+              ))
+            ) : (
+              <span className="tag-chip muted">No themes detected yet</span>
+            )}
+          </div>
+        </div>
+
+        <div className="glass-panel profile-card">
+          <div className="section-heading">
+            <h3>Psychological Depth</h3>
+            <span>Hidden AI Metrics</span>
+          </div>
+          
+          <div className="mb-4">
+            <span className="text-[10px] text-primary uppercase tracking-widest font-bold mb-1 block">Communication Style</span>
+            <p className="text-sm text-white/80 leading-relaxed bg-black/20 p-3 rounded-xl border border-white/5">
+              {insights.structuredMemory.communicationStyle}
+            </p>
+          </div>
+
+          <div className="mb-5">
+            <span className="text-[10px] text-secondary uppercase tracking-widest font-bold mb-1 block">Emotional Maturity</span>
+            <p className="text-sm text-white/80 leading-relaxed bg-black/20 p-3 rounded-xl border border-white/5">
+              {insights.structuredMemory.emotionalMaturity}
+            </p>
+          </div>
+
+          <div className="section-heading compact">
+            <h3>Support Needs</h3>
+            <span>Optimal response strategy</span>
+          </div>
+          <div className="tag-list">
+            {insights.structuredMemory.supportNeeds.length > 0 ? (
+              insights.structuredMemory.supportNeeds.map((need) => (
+                <span key={need} className="tag-chip !bg-emerald-500/10 !text-emerald-400 !border-emerald-500/20">
+                  {need}
+                </span>
+              ))
+            ) : (
+              <span className="text-xs text-white/40 italic">Need more conversations to analyze...</span>
+            )}
           </div>
         </div>
 
         <div className="glass-panel profile-card">
           <div className="section-heading">
             <h3>Recent highlights</h3>
-            <span>Conversation traces</span>
+            <span>Model, mood, and topic</span>
           </div>
           <div className="highlight-list">
-            {insights.recentHighlights.length > 0 ? (
-              insights.recentHighlights.map((highlight) => (
-                <div key={highlight.id} className="highlight-card">
-                  <strong>{highlight.avatarName}</strong>
-                  <p>{highlight.preview}</p>
+            {recentInteractions.length > 0 ? (
+              recentInteractions.map((interaction) => (
+                <div key={interaction.id} className="highlight-card interaction-card">
+                  <div className="interaction-header">
+                    <strong>{interaction.model}</strong>
+                    <span>{formatConversationDate(interaction.createdAt)}</span>
+                  </div>
+                  <div className="interaction-meta">{interaction.avatarName}</div>
+
+                  <div className="interaction-block">
+                    <span className="interaction-label">Talked about</span>
+                    <p>{interaction.topic}</p>
+                  </div>
+
+                  <div className="interaction-block">
+                    <span className="interaction-label">Emotional traits</span>
+                    <div className="tag-list">
+                      {interaction.emotionalTraits.map((trait) => (
+                        <span key={trait} className="tag-chip emotion-chip">
+                          {trait}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="interaction-block">
+                    <span className="interaction-label">One-line summary</span>
+                    <p>{interaction.summary}</p>
+                  </div>
                 </div>
               ))
             ) : (
               <div className="highlight-card">
                 <strong>No history yet</strong>
-                <p>Start chatting so the AI can build a richer user portrait.</p>
+                <p>Start chatting so the AI can map recent models, moods, and themes.</p>
               </div>
             )}
           </div>

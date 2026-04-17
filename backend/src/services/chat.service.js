@@ -65,8 +65,9 @@ export const handleChat = async ({ userId, avatarId, message }) => {
     data: {
       userId,
       avatarId,
+      model: aiResponse.model,
       message,
-      response: aiResponse
+      response: aiResponse.content
     }
   });
 
@@ -75,7 +76,7 @@ export const handleChat = async ({ userId, avatarId, message }) => {
     userId,
     avatarId,
     message,
-    response: aiResponse
+    response: aiResponse.content
   });
 
   await Promise.all([
@@ -100,7 +101,7 @@ export const handleChat = async ({ userId, avatarId, message }) => {
 
   return {
     message,
-    response: aiResponse,
+    response: aiResponse.content,
     memoriesUsed: memories,
     avatar,
     curatedAvatar: curatedAvatar

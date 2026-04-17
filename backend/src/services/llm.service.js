@@ -4,6 +4,9 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY
 });
 
+export const DEFAULT_CHAT_MODEL =
+  process.env.GROQ_MODEL || "llama-3.1-8b-instant";
+
 export const generateResponse = async (
   message,
   memories = [],
@@ -69,7 +72,7 @@ Feel like a real human having a natural conversation.
 `;
 
   const completion = await groq.chat.completions.create({
-    model: "llama-3.1-8b-instant",
+    model: DEFAULT_CHAT_MODEL,
     messages: [
       {
         role: "system",
@@ -86,5 +89,8 @@ Feel like a real human having a natural conversation.
     ]
   });
 
-  return completion.choices[0].message.content;
+  return {
+    content: completion.choices[0].message.content,
+    model: completion.model || DEFAULT_CHAT_MODEL
+  };
 };

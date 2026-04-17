@@ -45,6 +45,7 @@ model Chat {
   id        String   @id @default(uuid())
   userId    String
   avatarId  String
+  model     String?
   message   String
   response  String
   createdAt DateTime @default(now())

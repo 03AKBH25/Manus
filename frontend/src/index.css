@@ -797,6 +797,55 @@ img {
   gap: 10px;
 }
 
+.interaction-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.interaction-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.interaction-meta,
+.interaction-label {
+  color: rgba(191, 219, 254, 0.72);
+  font-size: 0.76rem;
+}
+
+.interaction-meta {
+  margin-top: -4px;
+}
+
+.interaction-label {
+  display: inline-block;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.interaction-block {
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.profile-chip-soft {
+  align-items: flex-start;
+  border-radius: 18px;
+  padding: 0.6rem 0.82rem;
+  white-space: normal;
+  line-height: 1.45;
+}
+
+.emotion-chip {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.18);
+  color: rgba(186, 230, 253, 0.95);
+}
+
 .avatar-portrait {
   position: relative;
   overflow: hidden;

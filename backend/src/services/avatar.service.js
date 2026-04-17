@@ -1,6 +1,8 @@
 import prisma from "../db/prisma.js";
 
 const CURATED_AVATAR_PREFIX = "curated-";
+const DEFAULT_CHAT_MODEL =
+  process.env.GROQ_MODEL || "llama-3.1-8b-instant";
 
 const BASE_AVATAR_CATALOG = [
   {
@@ -226,6 +228,24 @@ const safeArray = (value) => (Array.isArray(value) ? value : []);
 const safeObject = (value) =>
   value && typeof value === "object" && !Array.isArray(value) ? value : {};
 
+const joinValues = (values) => {
+  const filtered = values.filter(Boolean);
+
+  if (filtered.length === 0) {
+    return "";
+  }
+
+  if (filtered.length === 1) {
+    return filtered[0];
+  }
+
+  if (filtered.length === 2) {
+    return `${filtered[0]} and ${filtered[1]}`;
+  }
+
+  return `${filtered.slice(0, -1).join(", ")}, and ${filtered.at(-1)}`;
+};
+
 const hashString = (value) =>
   [...value].reduce((hash, char) => {
     return (hash * 31 + char.charCodeAt(0)) >>> 0;
@@ -342,6 +362,59 @@ const buildRecentHighlights = (chats) =>
     createdAt: chat.createdAt
   }));
 
+const buildTopicSummary = (messages) => {
+  const safeMessages = messages.filter(Boolean);
+  const themes = extractThemeKeywords(safeMessages);
+
+  if (themes.length >= 2) {
+    return `${themes[0]} and ${themes[1]}`;
+  }
+
+  if (themes.length === 1) {
+    return themes[0];
+  }
+
+  const firstMessage = safeMessages[0]?.replace(/\s+/g, " ").trim();
+
+  if (!firstMessage) {
+    return "General check-in";
+  }
+
+  return trimText(firstMessage.replace(/[.!?]+$/, ""), 72);
+};
+
+const buildEmotionalTraitList = (messages, limit = 3) => {
+  const emotion = analyzeEmotionalSignals(messages.filter(Boolean));
+  const traits = emotion.signals
+    .filter((signal) => signal.score > 6)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((signal) => signal.label);
+
+  return traits.length > 0 ? traits : ["Balanced"];
+};
+
+const buildRecentInteractions = (chats) =>
+  chats.slice(0, 6).map((chat) => {
+    const topic = buildTopicSummary([chat.message, chat.response]);
+    const emotionalTraits = buildEmotionalTraitList([chat.message]);
+    const leadEmotion = emotionalTraits[0] || "Balanced";
+    const tone = leadEmotion === "Balanced" ? "steady" : leadEmotion.toLowerCase();
+
+    return {
+      id: chat.id,
+      avatarId: chat.avatarId,
+      avatarName: chat.avatar?.name || "Avatar",
+      model: chat.model || DEFAULT_CHAT_MODEL,
+      topic,
+      emotionalTraits,
+      summary: `Focused on ${topic} with ${
+        chat.avatar?.name || "the assistant"
+      } in a ${tone} tone.`,
+      createdAt: chat.createdAt
+    };
+  });
+
 const buildEmotionalMaturity = ({ dominantEmotion, behavior, emotionSignals }) => {
   const stressScore =
     emotionSignals.find((signal) => signal.label === "Stressed")?.score || 0;
@@ -430,7 +503,7 @@ const buildNotableFacts = ({ chats }) =>
     })
   );
 
-const buildAvatarPreferenceBreakdown = (chats) => {
+const buildAvatarAffinityDetails = (chats) => {
   const counts = new Map();
 
   for (const chat of chats) {
@@ -445,7 +518,93 @@ const buildAvatarPreferenceBreakdown = (chats) => {
   return [...counts.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
-    .map(([avatarName, count]) => `${avatarName} (${count} chats)`);
+    .map(([avatarName, count]) => ({
+      avatarName,
+      count
+    }));
+};
+
+const buildAvatarPreferenceBreakdown = (chats) =>
+  buildAvatarAffinityDetails(chats).map(
+    ({ avatarName, count }) => `${avatarName} (${count} chats)`
+  );
+
+const describeEmotionSignal = (label) => {
+  switch (label.toLowerCase()) {
+    case "reflective":
+      return "thinks out loud and looks for meaning before landing on a conclusion.";
+    case "stressed":
+      return "brings pressure into the conversation and benefits from calming clarity.";
+    case "hopeful":
+      return "keeps searching for progress, reassurance, and a path forward.";
+    case "affectionate":
+      return "leans into closeness, care, and emotionally warm exchanges.";
+    case "playful":
+      return "likes lighter energy, humor, and chemistry when the moment allows it.";
+    default:
+      return "keeps a fairly even emotional tone unless the topic becomes personal.";
+  }
+};
+
+const buildBehavioralPortrait = ({
+  behavior,
+  emotionSignals,
+  topThemes,
+  preferenceProfile,
+  supportNeeds,
+  avatarAffinity
+}) => {
+  const emotionalTraits = emotionSignals
+    .filter((signal) => signal.score > 6)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(
+      (signal) => `${signal.label}: ${describeEmotionSignal(signal.label)}`
+    );
+  const conversationSignals = uniqueValues([
+    behavior.avgWords >= 18
+      ? `Usually writes detailed messages at about ${behavior.avgWords} words each.`
+      : behavior.avgWords <= 9
+        ? `Usually keeps messages concise at about ${behavior.avgWords} words each.`
+        : `Usually communicates in mid-length messages at about ${behavior.avgWords} words each.`,
+    behavior.questionRatio >= 35
+      ? `${behavior.questionRatio}% of recent messages are questions, so dialogue is used to think things through.`
+      : `${behavior.questionRatio}% of recent messages are questions, so the style leans more statement-first than question-led.`,
+    behavior.firstPersonRatio >= 45
+      ? `${behavior.firstPersonRatio}% of messages use personal framing, which signals emotionally relevant conversation.`
+      : `Personal framing appears in ${behavior.firstPersonRatio}% of messages, suggesting a mix of self-reflection and broader discussion.`,
+    behavior.exclamationRatio >= 25
+      ? `${behavior.exclamationRatio}% of messages show expressive emphasis, pointing to visible emotional energy.`
+      : null
+  ]);
+  const responsePreferences = uniqueValues([
+    ...safeArray(preferenceProfile.responseStyle),
+    ...safeArray(supportNeeds)
+  ]).slice(0, 6);
+  const dominantThemes =
+    topThemes.length > 0
+      ? joinValues(topThemes.slice(0, 3)).toLowerCase()
+      : "daily life and self-reflection";
+
+  return {
+    summary: `The user usually brings ${dominantThemes} into conversation and tends to ${
+      behavior.traits[0]?.toLowerCase() ||
+      "balance reflection with practical concerns"
+    }`,
+    traits: behavior.traits,
+    conversationSignals,
+    emotionalTraits:
+      emotionalTraits.length > 0
+        ? emotionalTraits
+        : [
+            "Balanced: keeps a fairly even emotional tone unless the topic becomes personal."
+          ],
+    responsePreferences,
+    favoriteCompanions: avatarAffinity.map(
+      ({ avatarName, count }) => `${avatarName} (${count} chats)`
+    ),
+    recurringThemes: topThemes
+  };
 };
 
 const getStableCuratedIdentity = (userId, existingProfile) => {
@@ -475,7 +634,10 @@ const buildCollectiveAnalysis = (chats, personaSummary) => {
   const topThemes = extractThemeKeywords(userMessages);
   const emotion = analyzeEmotionalSignals(userMessages);
   const behavior = analyzeBehavior(userMessages);
-  const avatarAffinity = buildAvatarPreferenceBreakdown(chats);
+  const avatarAffinity = buildAvatarAffinityDetails(chats);
+  const avatarPreferenceBreakdown = avatarAffinity.map(
+    ({ avatarName, count }) => `${avatarName} (${count} chats)`
+  );
   const personalityCore = buildPersonalityCore({
     topThemes,
     behavior,
@@ -500,7 +662,10 @@ const buildCollectiveAnalysis = (chats, personaSummary) => {
     behavior
   });
   const notableFacts = buildNotableFacts({ chats });
-  const recurringThemes = uniqueValues([...topThemes, ...avatarAffinity]);
+  const recurringThemes = uniqueValues([
+    ...topThemes,
+    ...avatarPreferenceBreakdown
+  ]);
   const profileSummary =
     personaSummary ||
     `${personalityCore}. ${communicationStyle} ${emotionalMaturity}`;
@@ -512,6 +677,15 @@ const buildCollectiveAnalysis = (chats, personaSummary) => {
     behavior,
     topThemes,
     recentHighlights: buildRecentHighlights(chats),
+    recentInteractions: buildRecentInteractions(chats),
+    behavioralPortrait: buildBehavioralPortrait({
+      behavior,
+      emotionSignals: emotion.signals,
+      topThemes,
+      preferenceProfile,
+      supportNeeds,
+      avatarAffinity
+    }),
     stats: {
       totalChats: chats.length,
       activeAvatars: new Set(chats.map((chat) => chat.avatarId)).size,
@@ -764,6 +938,8 @@ export const getUserInsights = async (userId) => {
   return {
     ...insights,
     personaSummary: profile.profileSummary,
+    recentInteractions: insights.recentInteractions,
+    behavioralPortrait: insights.behavioralPortrait,
     structuredMemory: {
       personalityCore: profile.personalityCore,
       emotionalMaturity: profile.emotionalMaturity,
