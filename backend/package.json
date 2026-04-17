@@ -5,10 +5,14 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "predev": "prisma generate",
+    "prestart": "prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "worker": "node src/queue/worker.js"
+    "worker": "node src/queue/worker.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy"
   },
   "keywords": [],
   "author": "",

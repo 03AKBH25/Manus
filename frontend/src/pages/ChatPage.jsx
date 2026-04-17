@@ -9,14 +9,12 @@ import {
   sendMessage
 } from "../services/api";
 
-const DEFAULT_USER_ID = "40f09f7d-8ac4-4e8a-a790-fedf89407223";
-
 const upsertAvatar = (avatars, incomingAvatar) => {
   const remaining = avatars.filter((avatar) => avatar.id !== incomingAvatar.id);
   return [incomingAvatar, ...remaining];
 };
 
-function ChatPage() {
+function ChatPage({ currentUser }) {
   const [avatars, setAvatars] = useState([]);
   const [selectedAvatarId, setSelectedAvatarId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -39,7 +37,7 @@ function ChatPage() {
       setError("");
 
       try {
-        const response = await fetchBootstrapData(DEFAULT_USER_ID);
+        const response = await fetchBootstrapData();
 
         if (ignore) {
           return;
@@ -77,7 +75,7 @@ function ChatPage() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [currentUser?.id]);
 
   useEffect(() => {
     let ignore = false;
@@ -92,7 +90,6 @@ function ChatPage() {
 
       try {
         const history = await fetchConversationHistory({
-          userId: DEFAULT_USER_ID,
           avatarId: selectedAvatarId
         });
 
@@ -131,7 +128,7 @@ function ChatPage() {
     setError("");
 
     try {
-      const response = await generateCuratedAvatar(DEFAULT_USER_ID);
+      const response = await generateCuratedAvatar();
 
       startTransition(() => {
         setAvatars((current) => upsertAvatar(current, response.avatar));
@@ -165,7 +162,6 @@ function ChatPage() {
 
     try {
       const response = await sendMessage({
-        userId: DEFAULT_USER_ID,
         avatarId: selectedAvatar.id,
         message: text
       });
@@ -215,7 +211,8 @@ function ChatPage() {
         onGenerateCurated={handleGenerateCurated}
         generatingCurated={generatingCurated}
         insights={insights}
-        userId={DEFAULT_USER_ID}
+        userId={currentUser?.id}
+        userLabel={currentUser?.name || currentUser?.email || currentUser?.id}
       />
 
       <ChatWindow

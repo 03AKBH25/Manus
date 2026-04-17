@@ -1,8 +1,17 @@
 import hindsight from "../config/hindsight.js";
 
-export const recallMemory = async (userId, message) => {
+const buildAvatarMemoryNamespace = (userId, avatarId) =>
+  `user:${userId}:avatar:${avatarId}`;
+
+const buildCollectiveMemoryNamespace = (userId) => `user:${userId}:collective`;
+
+export const recallMemory = async (userId, avatarId, message, options = {}) => {
   try {
-    const memories = await hindsight.recall(userId, message);
+    const namespace = options.collective
+      ? buildCollectiveMemoryNamespace(userId)
+      : buildAvatarMemoryNamespace(userId, avatarId);
+
+    const memories = await hindsight.recall(namespace, message);
 
     return memories || [];
   } catch (error) {
@@ -11,9 +20,16 @@ export const recallMemory = async (userId, message) => {
   }
 };
 
-export const storeMemory = async (userId, message, response) => {
+export const storeMemory = async (userId, avatarId, message, response) => {
+  const avatarNamespace = buildAvatarMemoryNamespace(userId, avatarId);
+  const collectiveNamespace = buildCollectiveMemoryNamespace(userId);
+  const memoryPayload = `User: ${message}\nAI: ${response}`;
+
   try {
-    await hindsight.retain(userId, `User: ${message}\nAI: ${response}`);
+    await Promise.all([
+      hindsight.retain(avatarNamespace, memoryPayload),
+      hindsight.retain(collectiveNamespace, memoryPayload)
+    ]);
   } catch (error) {
     console.error("Memory store error:", error);
   }

@@ -8,9 +8,9 @@ export const generateResponse = async (
   message,
   memories = [],
   avatar = {},
-  history = []
+  history = [],
+  memoryContext = {}
 ) => {
-
   const avatarName = avatar?.name || "AI Companion";
   const avatarPersonality =
     avatar?.personality ||
@@ -24,6 +24,26 @@ export const generateResponse = async (
         .join("\n")
     : "No relevant past memory.";
 
+  const structuredMemoryText =
+    memoryContext?.scope === "collective"
+      ? `
+Structured User Memory:
+- Personality Core: ${memoryContext.personalityCore || "Unknown"}
+- Emotional Maturity: ${memoryContext.emotionalMaturity || "Unknown"}
+- Communication Style: ${memoryContext.communicationStyle || "Unknown"}
+- Preferred Topics: ${(memoryContext.recurringThemes || []).join(", ") || "Unknown"}
+- Support Needs: ${(memoryContext.supportNeeds || []).join(", ") || "Unknown"}
+- Notable User Facts: ${(memoryContext.notableFacts || []).join(" | ") || "Unknown"}
+`
+      : `
+Avatar-Specific User Memory:
+- Relationship Summary: ${memoryContext.profileSummary || "Unknown"}
+- Relationship Dynamic: ${memoryContext.relationshipDynamic || "Unknown"}
+- Communication Notes: ${memoryContext.communicationNotes || "Unknown"}
+- Recurring Topics: ${(memoryContext.recurringTopics || []).join(", ") || "Unknown"}
+- Notable Facts: ${(memoryContext.notableFacts || []).join(" | ") || "Unknown"}
+`;
+
   const systemPrompt = `
 You are roleplaying as:
 
@@ -32,15 +52,17 @@ Personality: ${avatarPersonality}
 
 Behavior Rules:
 - Stay fully in character at all times
-- Keep responses short (2-4 sentences max)
+- Keep responses short (4-8 sentences max)
 - Speak naturally like a real person
 - Avoid sounding like an AI or assistant
 - Do not over-explain
-- Show emotion when appropriate
-- Do not mention "memory" unless explicitly asked
+- Show emotion when appropriate 
+- Do not mention "memory" unless explicitly asked but use the "memory" to stick to the conversation
 
 Memory (use only if relevant):
 ${memoryText}
+
+${structuredMemoryText}
 
 Goal:
 Feel like a real human having a natural conversation.

@@ -6,11 +6,11 @@ import { storeMemory } from "../services/memory.service.js";
 const worker = new Worker(
   "memoryQueue",
   async (job) => {
-    const { userId, message, response } = job.data;
+    const { userId, avatarId, message, response } = job.data;
 
     console.log("Processing memory job...");
 
-    await storeMemory(userId, message, response);
+    await storeMemory(userId, avatarId, message, response);
   },
   {
     connection: redis

@@ -7,7 +7,8 @@ function AvatarSelector({
   onGenerateCurated,
   generatingCurated,
   insights,
-  userId
+  userId,
+  userLabel
 }) {
   const curatedAvatar = avatars.find((avatar) => avatar.type === "curated");
   const presetAvatars = avatars.filter((avatar) => avatar.type !== "curated");
@@ -109,7 +110,7 @@ function AvatarSelector({
 
       <div className="session-card">
         <span className="session-label">Active user</span>
-        <strong>{userId}</strong>
+        <strong>{userLabel || userId}</strong>
       </div>
     </aside>
   );

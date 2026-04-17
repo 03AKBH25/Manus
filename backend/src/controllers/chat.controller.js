@@ -8,17 +8,14 @@ import {
 const getRequiredValue = (value) =>
   typeof value === "string" ? value.trim() : "";
 
-export const chatHandler = async (req, res) => {
+export const chatHandler = async (req, res, next) => {
   try {
-    const { userId, avatarId, message } = req.body;
-
-    if (!userId || !avatarId || !message) {
-      return res.status(400).json({
-        error: "Missing required fields"
-      });
-    }
-
-    const response = await handleChat({ userId, avatarId, message });
+    const { avatarId, message } = req.validated.body;
+    const response = await handleChat({
+      userId: req.user.id,
+      avatarId,
+      message
+    });
 
     res.json({
       success: true,
@@ -26,23 +23,13 @@ export const chatHandler = async (req, res) => {
     });
   } catch (error) {
     console.error("Chat Error:", error);
-    res.status(500).json({
-      error: error.message || "Internal server error"
-    });
+    next(error);
   }
 };
 
-export const bootstrapHandler = async (req, res) => {
+export const bootstrapHandler = async (req, res, next) => {
   try {
-    const userId = getRequiredValue(req.query.userId);
-
-    if (!userId) {
-      return res.status(400).json({
-        error: "Missing required userId"
-      });
-    }
-
-    const payload = await getExperienceBootstrap(userId);
+    const payload = await getExperienceBootstrap(req.user.id);
 
     res.json({
       success: true,
@@ -50,25 +37,15 @@ export const bootstrapHandler = async (req, res) => {
     });
   } catch (error) {
     console.error("Bootstrap Error:", error);
-    res.status(500).json({
-      error: error.message || "Internal server error"
-    });
+    next(error);
   }
 };
 
-export const historyHandler = async (req, res) => {
+export const historyHandler = async (req, res, next) => {
   try {
-    const userId = getRequiredValue(req.query.userId);
-    const avatarId = getRequiredValue(req.query.avatarId);
-    const limit = Number.parseInt(req.query.limit, 10) || 16;
-
-    if (!userId || !avatarId) {
-      return res.status(400).json({
-        error: "Missing required userId or avatarId"
-      });
-    }
-
-    const messages = await getConversationHistory(userId, avatarId, limit);
+    const avatarId = req.validated.query.avatarId;
+    const limit = Number.parseInt(getRequiredValue(req.query.limit), 10) || 16;
+    const messages = await getConversationHistory(req.user.id, avatarId, limit);
 
     res.json({
       success: true,
@@ -76,23 +53,15 @@ export const historyHandler = async (req, res) => {
     });
   } catch (error) {
     console.error("History Error:", error);
-    res.status(500).json({
-      error: error.message || "Internal server error"
-    });
+    next(error);
   }
 };
 
-export const curatedAvatarHandler = async (req, res) => {
+export const curatedAvatarHandler = async (req, res, next) => {
   try {
-    const userId = getRequiredValue(req.body.userId);
-
-    if (!userId) {
-      return res.status(400).json({
-        error: "Missing required userId"
-      });
-    }
-
-    const curatedAvatar = await syncCuratedAvatar(userId);
+    const curatedAvatar = await syncCuratedAvatar(req.user.id, {
+      activateCurated: true
+    });
 
     res.json({
       success: true,
@@ -106,8 +75,6 @@ export const curatedAvatarHandler = async (req, res) => {
     });
   } catch (error) {
     console.error("Curated Avatar Error:", error);
-    res.status(500).json({
-      error: error.message || "Internal server error"
-    });
+    next(error);
   }
 };

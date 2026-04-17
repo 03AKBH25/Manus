@@ -5,19 +5,30 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
+enum UserRole {
+  USER
+  ADMIN
+}
 
-  chats     Chat[]
-  persona   Persona?
+model User {
+  id           String   @id @default(uuid())
+  name         String?
+  email        String?  @unique
+  passwordHash String?
+  role         UserRole @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  chats        Chat[]
+  avatarMemories AvatarMemoryProfile[]
+  memoryProfile UserMemoryProfile?
+  persona      Persona?
 }
 
 model Avatar {
@@ -26,6 +37,7 @@ model Avatar {
   personality String
   createdAt   DateTime @default(now())
 
+  avatarMemories AvatarMemoryProfile[]
   chats       Chat[]
 }
 
@@ -48,4 +60,50 @@ model Persona {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model UserMemoryProfile {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  curatedAvatarReady   Boolean  @default(false)
+  curatedAvatarName    String?
+  curatedAvatarTitle   String?
+  curatedAvatarImage   String?
+  curatedAccentFrom    String?
+  curatedAccentTo      String?
+  profileSummary       String
+  personalityCore      String
+  emotionalMaturity    String
+  communicationStyle   String
+  preferenceProfile    Json
+  emotionalProfile     Json
+  supportNeeds         Json
+  recurringThemes      Json
+  notableFacts         Json
+  sourceChatCount      Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model AvatarMemoryProfile {
+  id                  String   @id @default(uuid())
+  userId              String
+  avatarId            String
+  avatarName          String
+  summary             String
+  relationshipDynamic String
+  communicationNotes  String
+  emotionalContext    Json
+  recurringTopics     Json
+  notableFacts        Json
+  interactionCount    Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  avatar Avatar @relation(fields: [avatarId], references: [id])
+
+  @@unique([userId, avatarId])
 }

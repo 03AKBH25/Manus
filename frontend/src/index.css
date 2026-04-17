@@ -51,7 +51,50 @@ img {
   display: grid;
   grid-template-columns: 340px minmax(0, 1fr) 320px;
   gap: 20px;
+  padding: 0 20px 20px;
+}
+
+.dashboard-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   padding: 20px;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+}
+
+.dashboard-header h1 {
+  margin: 0.45rem 0 0;
+  font-size: 1.2rem;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.dashboard-nav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dashboard-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(2, 6, 23, 0.46);
+  color: rgba(241, 245, 249, 0.9);
+  padding: 0.82rem 1rem;
+  border-radius: 999px;
+}
+
+.dashboard-nav button.active {
+  background: rgba(99, 102, 241, 0.24);
+  border-color: rgba(129, 140, 248, 0.4);
 }
 
 .glass-panel {
@@ -258,6 +301,13 @@ img {
 }
 
 .primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.primary-action {
   width: 100%;
   padding: 0.95rem 1rem;
   border-radius: 16px;
@@ -403,6 +453,10 @@ img {
   border: 1px solid rgba(248, 113, 113, 0.24);
   color: #fecaca;
   background: rgba(127, 29, 29, 0.26);
+}
+
+.error-banner.compact {
+  margin: 0;
 }
 
 .chat-scroll {
@@ -623,6 +677,126 @@ img {
   z-index: 1;
 }
 
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(360px, 460px);
+  gap: 20px;
+  padding: 20px;
+}
+
+.auth-hero,
+.auth-card,
+.profile-card {
+  padding: 24px;
+}
+
+.auth-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+
+.auth-hero h1 {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(2rem, 4vw, 3.7rem);
+  line-height: 0.98;
+}
+
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
+}
+
+.auth-tabs {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 8px;
+  border-radius: 18px;
+  background: rgba(2, 6, 23, 0.5);
+}
+
+.auth-tabs button,
+.auth-form input {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.75);
+  color: #f8fafc;
+}
+
+.auth-tabs button {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+}
+
+.auth-tabs button.active {
+  background: rgba(99, 102, 241, 0.24);
+  border-color: rgba(129, 140, 248, 0.42);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: rgba(226, 232, 240, 0.8);
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  outline: none;
+}
+
+.auth-form input:disabled {
+  opacity: 0.7;
+}
+
+.auth-feature-list,
+.profile-grid-wide {
+  display: grid;
+  gap: 16px;
+}
+
+.profile-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-loading {
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.profile-grid-wide {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.profile-detail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .avatar-portrait {
   position: relative;
   overflow: hidden;
@@ -701,11 +875,22 @@ img {
   .chat-panel {
     min-height: 720px;
   }
+
+  .auth-shell,
+  .profile-grid-wide {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 980px) {
   .page-shell {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
   }
 
   .sidebar-panel,
@@ -721,6 +906,10 @@ img {
 
   .message-row {
     max-width: 100%;
+  }
+
+  .profile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -753,5 +942,18 @@ img {
 
   .send-button {
     width: 100%;
+  }
+
+  .dashboard-shell,
+  .auth-shell {
+    padding: 12px;
+  }
+
+  .auth-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
   }
 }
