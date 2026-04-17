@@ -7,7 +7,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "worker": "node src/queue/worker.js"
   },
   "keywords": [],
   "author": "",
@@ -15,12 +16,15 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
+    "@vectorize-io/hindsight-client": "^0.5.3",
+    "axios": "^1.15.0",
+    "bullmq": "^5.74.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "groq-sdk": "^1.1.2",
     "helmet": "^8.1.0",
-    "hindsight": "^0.0.1-alpha.1",
+    "ioredis": "^5.10.1",
     "morgan": "^1.10.1",
     "pg": "^8.20.0",
     "prisma": "^7.7.0"
