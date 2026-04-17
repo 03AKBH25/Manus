@@ -85,6 +85,8 @@ function ChatPage({ currentUser }) {
     }
 
     const loadHistory = async () => {
+      // Clear messages immediately so we don't show the old avatar's history while loading
+      setMessages([]);
       setHistoryLoading(true);
       setError("");
 
