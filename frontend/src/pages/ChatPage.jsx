@@ -14,7 +14,12 @@ const upsertAvatar = (avatars, incomingAvatar) => {
   return [incomingAvatar, ...remaining];
 };
 
-function ChatPage({ currentUser }) {
+function ChatPage({
+  currentUser,
+  requestedAvatarId,
+  onRequestedAvatarApplied,
+  onCreateCustomAvatar
+}) {
   const [avatars, setAvatars] = useState([]);
   const [selectedAvatarId, setSelectedAvatarId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -76,6 +81,23 @@ function ChatPage({ currentUser }) {
       ignore = true;
     };
   }, [currentUser?.id]);
+
+  useEffect(() => {
+    if (!requestedAvatarId) {
+      return;
+    }
+
+    const requestedAvatarExists = avatars.some(
+      (avatar) => avatar.id === requestedAvatarId
+    );
+
+    if (!requestedAvatarExists) {
+      return;
+    }
+
+    setSelectedAvatarId(requestedAvatarId);
+    onRequestedAvatarApplied?.();
+  }, [avatars, onRequestedAvatarApplied, requestedAvatarId]);
 
   useEffect(() => {
     let ignore = false;
@@ -211,6 +233,7 @@ function ChatPage({ currentUser }) {
         selectedAvatarId={selectedAvatarId}
         onSelect={setSelectedAvatarId}
         onGenerateCurated={handleGenerateCurated}
+        onCreateCustom={onCreateCustomAvatar}
         generatingCurated={generatingCurated}
         insights={insights}
         userId={currentUser?.id}

@@ -5,13 +5,15 @@ function AvatarSelector({
   selectedAvatarId,
   onSelect,
   onGenerateCurated,
+  onCreateCustom,
   generatingCurated,
   insights,
   userId,
   userLabel
 }) {
   const curatedAvatar = avatars.find((avatar) => avatar.type === "curated");
-  const presetAvatars = avatars.filter((avatar) => avatar.type !== "curated");
+  const customAvatars = avatars.filter((avatar) => avatar.type === "custom");
+  const presetAvatars = avatars.filter((avatar) => avatar.type === "preset");
 
   return (
     <aside className="glass-panel sidebar-panel">
@@ -73,6 +75,60 @@ function AvatarSelector({
             : "Create / refresh curated avatar"}
         </button>
       </section>
+
+      <section className="curated-note">
+        <div className="section-heading compact">
+          <h3>Custom avatar</h3>
+          <span>Your design</span>
+        </div>
+        <p>
+          Build your own avatar with a chosen scene, personality, and portrait,
+          then jump straight into chat with it.
+        </p>
+        <button type="button" className="secondary-action" onClick={onCreateCustom}>
+          Build custom avatar
+        </button>
+      </section>
+
+      <div className="section-heading compact">
+        <h3>Your custom avatars</h3>
+        <span>{customAvatars.length} created</span>
+      </div>
+
+      <div className="avatar-list">
+        {customAvatars.length > 0 ? (
+          customAvatars.map((avatar) => (
+            <button
+              key={avatar.id}
+              type="button"
+              className={`avatar-card ${
+                selectedAvatarId === avatar.id ? "selected" : ""
+              }`}
+              onClick={() => onSelect(avatar.id)}
+            >
+              <AvatarPortrait avatar={avatar} size="md" />
+              <div className="avatar-copy">
+                <div className="avatar-heading">
+                  <strong>{avatar.name}</strong>
+                  <span>{avatar.title}</span>
+                </div>
+                <p>{avatar.description}</p>
+                <div className="tag-list">
+                  {avatar.badges?.map((badge) => (
+                    <span key={badge} className="tag-chip">
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </button>
+          ))
+        ) : (
+          <div className="detail-card">
+            Create one from the builder and it will appear here.
+          </div>
+        )}
+      </div>
 
       <div className="section-heading compact">
         <h3>Avatar lineup</h3>

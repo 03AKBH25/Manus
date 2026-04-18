@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
-import { Loader2, LogOut, MessageSquareMore, ShieldCheck } from "lucide-react";
+import {
+  Loader2,
+  LogOut,
+  MessageSquareMore,
+  ShieldCheck,
+  Sparkles
+} from "lucide-react";
 import ChatPage from "./pages/ChatPage";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
+import CustomAvatarPage from "./pages/CustomAvatarPage";
 import {
   fetchCurrentUser,
   getStoredToken,
@@ -13,6 +20,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [activeView, setActiveView] = useState("chat");
   const [checkingSession, setCheckingSession] = useState(true);
+  const [requestedAvatarId, setRequestedAvatarId] = useState(null);
 
   useEffect(() => {
     let ignore = false;
@@ -55,11 +63,18 @@ function App() {
     setAuthToken(token);
     setCurrentUser(user);
     setActiveView("chat");
+    setRequestedAvatarId(null);
   };
 
   const handleLogout = () => {
     setAuthToken("");
     setCurrentUser(null);
+    setActiveView("chat");
+    setRequestedAvatarId(null);
+  };
+
+  const handleCustomAvatarCreated = (avatar) => {
+    setRequestedAvatarId(avatar.id);
     setActiveView("chat");
   };
 
@@ -103,6 +118,14 @@ function App() {
             <ShieldCheck size={16} />
             <span>Profile</span>
           </button>
+          <button
+            type="button"
+            className={activeView === "builder" ? "active" : ""}
+            onClick={() => setActiveView("builder")}
+          >
+            <Sparkles size={16} />
+            <span>Create Avatar</span>
+          </button>
           <button type="button" onClick={handleLogout}>
             <LogOut size={16} />
             <span>Logout</span>
@@ -111,7 +134,17 @@ function App() {
       </header>
 
       {activeView === "chat" ? (
-        <ChatPage currentUser={currentUser} />
+        <ChatPage
+          currentUser={currentUser}
+          requestedAvatarId={requestedAvatarId}
+          onRequestedAvatarApplied={() => setRequestedAvatarId(null)}
+          onCreateCustomAvatar={() => setActiveView("builder")}
+        />
+      ) : activeView === "builder" ? (
+        <CustomAvatarPage
+          onCancel={() => setActiveView("chat")}
+          onAvatarCreated={handleCustomAvatarCreated}
+        />
       ) : (
         <ProfilePage currentUser={currentUser} onUserUpdate={setCurrentUser} />
       )}

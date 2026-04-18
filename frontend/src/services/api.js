@@ -88,6 +88,11 @@ export const generateCuratedAvatar = async () => {
   return response.data.data;
 };
 
+export const createCustomAvatar = async (data) => {
+  const response = await API.post("/chat/custom-avatar", data);
+  return response.data.data;
+};
+
 export const sendMessage = async (data) => {
   const response = await API.post("/chat", data);
   return response.data.data;
